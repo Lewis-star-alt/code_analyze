@@ -20,7 +20,7 @@
 ### Сборка из исходников
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Lewis-star-alt/code_analyze
 cd code-analyzer
 cargo build --release
 ```
