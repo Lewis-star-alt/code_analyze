@@ -180,25 +180,9 @@ fn get_text_rules() -> Vec<TextRule> {
             Severity::Warning,
             vec!["rust", "c", "cpp"]
         ),
-         TextRule::new(
+        TextRule::new(
             "magic-number",
-            r"(?x)                # Включение расширенного режима для комментариев
-            \b                    # Граница слова
-            (                     # Группа чисел
-              0\b |              # 0 как отдельное число (но не в 0.5 или 0x)
-              -1\b |             # -1 как отдельное число
-              1\b |              # 1 как отдельное число (но не в 1.0 или 1e10)
-              (?:                # Неcapturing группа для популярных магических чисел
-                10|100|1000|     # Десятичные степени
-                255|256|1024|    # Байтовые/компьютерные числа
-                60|3600|24|7|    # Время (секунды, часы, дни, недели)
-                8080|3000|3306   # Порт numbers
-              )\b
-            )
-            (?!\.\d)             # Не после точки (исключает float)
-            (?!\()               # Не перед скобкой (исключает вызовы функций)
-            (?!\w)               # Не перед буквой (исключает идентификаторы)
-            ",
+            r"\b([0-9]{2,}|[3-9])\b",
             "Возможно магическое число - рассмотрите использование именованной константы",
             Severity::Info,
             vec!["rust", "c", "cpp"]
@@ -268,7 +252,7 @@ fn is_false_positive(line: &str, rule_name: &str) -> bool {
             return true;
         }
         
-        // Игнорируем версии в строках (v1.0.0)
+        // Игнорируем версии в строках
         if line.contains("version") || line.contains("v1.") || line.contains("v0.") {
             return true;
         }
@@ -276,6 +260,21 @@ fn is_false_positive(line: &str, rule_name: &str) -> bool {
         // Игнорируем IP-адреса
         let ip_regex = Regex::new(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b").unwrap();
         if ip_regex.is_match(line) {
+            return true;
+        }
+        
+        // Игнорируем даты (годы)
+        if line.contains("19") || line.contains("20") {
+            return true;
+        }
+        
+        // Игнорируем числа в hex формате
+        if line.contains("0x") {
+            return true;
+        }
+        
+        // Игнорируем числа в именах файлов и путях
+        if line.contains("/") || line.contains("\\") || line.contains(".txt") || line.contains(".rs") {
             return true;
         }
     }
